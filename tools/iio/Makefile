@@ -22,6 +22,12 @@ ALL_PROGRAMS := $(patsubst %,$(OUTPUT)%,$(ALL_TARGETS))
 
 all: $(ALL_PROGRAMS)
 
+BINDIR=usr/bin
+INSTALL_PROGRAM=install -m 755 -p
+DEL_FILE=rm -f
+
+all: iio_event_monitor lsiio generic_buffer
+
 export srctree OUTPUT CC LD CFLAGS
 include $(srctree)/tools/build/Makefile.include
 
@@ -53,6 +59,18 @@ $(IIO_GENERIC_BUFFER_IN): prepare FORCE
 $(OUTPUT)iio_generic_buffer: $(IIO_GENERIC_BUFFER_IN)
 	$(QUIET_LINK)$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
+install:
+	- mkdir -p $(INSTALL_ROOT)/$(BINDIR)
+	- $(INSTALL_PROGRAM) "iio_event_monitor" "$(INSTALL_ROOT)/$(BINDIR)/iio_event_monitor"
+	- $(INSTALL_PROGRAM) "lsiio" "$(INSTALL_ROOT)/$(BINDIR)/lsiio"
+	- $(INSTALL_PROGRAM) "generic_buffer" "$(INSTALL_ROOT)/$(BINDIR)/generic_buffer"
+
+uninstall:
+	$(DEL_FILE) "$(INSTALL_ROOT)/$(BINDIR)/iio_event_monitor"
+	$(DEL_FILE) "$(INSTALL_ROOT)/$(BINDIR)/lsiio"
+	$(DEL_FILE) "$(INSTALL_ROOT)/$(BINDIR)/generic_buffer"
+
+.PHONY: clean
 clean:
 	rm -f $(ALL_PROGRAMS)
 	rm -rf $(OUTPUT)include/linux/iio
