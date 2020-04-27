@@ -392,6 +392,7 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
 	imx6dl-colibri-eval-v3.dtb \
 	imx6dl-crix-cdlx00.dtb \
 	imx6dl-christ.dtb \
+	imx6dl-crix.dtb \
 	imx6dl-cubox-i.dtb \
 	imx6dl-cubox-i-emmc-som-v15.dtb \
 	imx6dl-cubox-i-som-v15.dtb \
@@ -454,7 +455,7 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
 	imx6q-b650v3.dtb \
 	imx6q-b850v3.dtb \
 	imx6q-arm2-hsic.dtb \
-	imx6q-christ.dtb \
+	imx6q-crix.dtb \
 	imx6q-pop-arm2.dtb \
 	imx6q-cm-fx6.dtb \
 	imx6q-crix-cqx00.dtb \
