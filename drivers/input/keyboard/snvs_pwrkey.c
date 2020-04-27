@@ -45,13 +45,12 @@ static void imx_imx_snvs_check_for_events(struct timer_list *t)
 	u32 state;
 
 	/* On imx6q/dl this does not work, as this function is only called
-	 * on button release. Take the fix from
-	 * https://community.nxp.com/thread/358898
-	 * and make it dependent on our board
-	 */
-	if ((of_machine_is_compatible("ces,imx6dl-pixi-cdlx") ||
-		of_machine_is_compatible("ces,imx6q-pixi-cqx") ||
-		of_machine_is_compatible("ces,imx6q-crix-arqx"))) {
+	* on button release. Take the fix from
+	* https://community.nxp.com/thread/358898
+	* and make it dependent on our board
+	*/
+	if ((of_machine_is_compatible("ces,imx6dl-pixi") ||
+		of_machine_is_compatible("ces,imx6q-pixi"))){
 		state = 1;
 		input_event(input, EV_KEY, pdata->keycode, state);
 		input_sync(input);
