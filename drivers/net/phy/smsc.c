@@ -153,6 +153,7 @@ static int lan87xx_read_status(struct phy_device *phydev)
 	return err;
 }
 
+<<<<<<< HEAD
 static int smsc_get_sset_count(struct phy_device *phydev)
 {
 	return ARRAY_SIZE(smsc_hw_stats);
@@ -194,7 +195,7 @@ static void smsc_get_stats(struct phy_device *phydev,
 
 static int smsc_phy_probe(struct phy_device *phydev)
 {
-	struct device *dev = &phydev->mdio.dev;
+	struct device *dev = &phydev->dev;
 	struct device_node *of_node = dev->of_node;
 	struct smsc_phy_priv *priv;
 
@@ -223,6 +224,8 @@ static struct phy_driver smsc_phy_driver[] = {
 
 	.probe		= smsc_phy_probe,
 
+	.probe		= smsc_phy_probe,
+
 	/* basic functions */
 	.config_init	= smsc_phy_config_init,
 	.soft_reset	= smsc_phy_reset,
@@ -240,6 +243,8 @@ static struct phy_driver smsc_phy_driver[] = {
 
 	.features	= PHY_BASIC_FEATURES,
 	.flags		= PHY_HAS_INTERRUPT,
+
+	.probe		= smsc_phy_probe,
 
 	.probe		= smsc_phy_probe,
 
@@ -268,7 +273,10 @@ static struct phy_driver smsc_phy_driver[] = {
 
 	.probe		= smsc_phy_probe,
 
+	.probe		= smsc_phy_probe,
+
 	/* basic functions */
+	.config_aneg	= genphy_config_aneg,
 	.read_status	= lan87xx_read_status,
 	.config_init	= smsc_phy_config_init,
 	.soft_reset	= smsc_phy_reset,
@@ -294,6 +302,8 @@ static struct phy_driver smsc_phy_driver[] = {
 
 	.probe		= smsc_phy_probe,
 
+	.probe		= smsc_phy_probe,
+
 	/* basic functions */
 	.config_init	= lan911x_config_init,
 
@@ -310,6 +320,8 @@ static struct phy_driver smsc_phy_driver[] = {
 
 	.features	= PHY_BASIC_FEATURES,
 	.flags		= PHY_HAS_INTERRUPT | PHY_RST_AFTER_CLK_EN,
+
+	.probe		= smsc_phy_probe,
 
 	.probe		= smsc_phy_probe,
 
@@ -334,12 +346,14 @@ static struct phy_driver smsc_phy_driver[] = {
 	.phy_id_mask	= 0xfffffff0,
 	.name		= "SMSC LAN8740",
 
-	.features	= PHY_BASIC_FEATURES,
-	.flags		= PHY_HAS_INTERRUPT,
+	.features	= (PHY_BASIC_FEATURES | SUPPORTED_Pause
+				| SUPPORTED_Asym_Pause),
+	.flags		= PHY_HAS_INTERRUPT | PHY_HAS_MAGICANEG,
 
 	.probe		= smsc_phy_probe,
 
 	/* basic functions */
+	.config_aneg	= genphy_config_aneg,
 	.read_status	= lan87xx_read_status,
 	.config_init	= smsc_phy_config_init,
 	.soft_reset	= smsc_phy_reset,
