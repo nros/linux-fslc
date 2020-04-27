@@ -111,6 +111,9 @@
 	phy-handle = <&ethphy>;
 	status = "okay";
 
+	phy-reset-gpios = <&gpio3 22 GPIO_ACTIVE_LOW>;
+	phy-reset-duration = <30>;
+	
 	mdio {
 		#address-cells = <1>;
 		#size-cells = <0>;
