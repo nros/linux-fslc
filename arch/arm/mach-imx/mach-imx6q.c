@@ -215,12 +215,14 @@ static void __init imx6q_1588_init(void)
 				IMX6Q_GPR1_ENET_CLK_SEL_ANATOP :
 				IMX6Q_GPR1_ENET_CLK_SEL_PAD;
 	gpr = syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
-	if (!IS_ERR(gpr))
-		regmap_update_bits(gpr, IOMUXC_GPR1,
-				IMX6Q_GPR1_ENET_CLK_SEL_MASK,
-				clksel);
-	else
-		pr_err("failed to find fsl,imx6q-iomuxc-gpr regmap\n");
+	if (!IS_ERR(gpr)) {
+		if (!(of_machine_is_compatible("ces,imx6dl-pixi") ||
+			of_machine_is_compatible("ces,imx6q-pixi")))
+			regmap_update_bits(gpr, IOMUXC_GPR1,
+					IMX6Q_GPR1_ENET_CLK_SEL_MASK,
+					IMX6Q_GPR1_ENET_CLK_SEL_ANATOP);
+	} else
+		pr_err("failed to find fsl,imx6q-iomux-gpr regmap\n");
 
 	clk_put(enet_ref);
 put_ptp_clk:
