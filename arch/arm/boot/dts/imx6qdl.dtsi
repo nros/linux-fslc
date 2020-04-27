@@ -823,6 +823,14 @@
 				snvs_lpgpr: snvs-lpgpr {
 					compatible = "fsl,imx6q-snvs-lpgpr";
 				};
+				
+				snvs_pwrkey: snvs-powerkey {
+					compatible = "fsl,sec-v4.0-pwrkey";
+					regmap = <&snvs>;
+					interrupts = <GIC_SPI 4 IRQ_TYPE_LEVEL_HIGH>;
+					linux,keycode = <116>; /* KEY_POWER */
+					status = "disabled";
+				};
 			};
 
 			epit1: epit@20d0000 { /* EPIT1 */
