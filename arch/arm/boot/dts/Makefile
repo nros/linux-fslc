@@ -423,6 +423,8 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
 	imx6dl-phytec-pbab01.dtb \
 	imx6dl-pixi-cdlx00.dtb \
 	imx6dl-pixi.dtb \
+	imx6dl-pixi-cdl100.dtb \
+	imx6dl-pixi-cdl200.dtb \
 	imx6dl-rex-basic.dtb \
 	imx6dl-riotboard.dtb \
 	imx6dl-sabreauto.dtb \
@@ -509,6 +511,8 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
 	imx6q-pistachio.dtb \
 	imx6q-pixi-cqx00.dtb \
 	imx6q-pixi.dtb \
+	imx6q-pixi-cq100.dtb \
+	imx6q-pixi-cq200.dtb \
 	imx6q-rex-pro.dtb \
 	imx6q-sabreauto.dtb \
 	imx6q-sabrelite.dtb \
