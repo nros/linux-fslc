@@ -303,7 +303,7 @@ config OPT3001
 	tristate "Texas Instruments OPT3001 Light Sensor"
 	depends on I2C
 	help
-	  If you say Y or M here, you get support for Texas Instruments
+	  If you say X (or Y) or M here, you get support for Texas Instruments
 	  OPT3001 Ambient Light Sensor.
 
 	  If built as a dynamically linked module, it will be called
