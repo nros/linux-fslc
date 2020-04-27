@@ -459,6 +459,8 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
 	imx6q-b850v3.dtb \
 	imx6q-arm2-hsic.dtb \
 	imx6q-crix.dtb \
+	imx6q-crix-cq100.dtb \
+	imx6q-crix-arq100.dtb \
 	imx6q-pop-arm2.dtb \
 	imx6q-cm-fx6.dtb \
 	imx6q-crix-cqx00.dtb \
