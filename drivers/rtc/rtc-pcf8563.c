@@ -244,6 +244,17 @@ static int pcf8563_get_datetime(struct i2c_client *client, struct rtc_time *tm)
 		tm->tm_sec, tm->tm_min, tm->tm_hour,
 		tm->tm_mday, tm->tm_mon, tm->tm_year, tm->tm_wday);
 
+	/* the clock can give out invalid datetime, but we cannot return
+	 * -EINVAL otherwise hwclock will refuse to set the time on bootup.
+	 */
+
+	/* Ignore this and returm -EINVAL on battery_low as the system might
+	 * lock up in scenarios where time later than 2038-01-19 03:14:07 is
+	 * reported. Keep it this way until the Y2K38 bug is resolved.
+	*/
+	if (rtc_valid_tm(tm) < 0)
+		dev_err(&client->dev, "retrieved date/time is not valid.\n");
+
 	return 0;
 }
 
