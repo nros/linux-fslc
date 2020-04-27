@@ -3324,6 +3324,8 @@ fec_get_reset_phy(struct platform_device *pdev, int *msec, int *phy_reset)
 	else
 		usleep_range(phy_post_delay * 1000,
 			     phy_post_delay * 1000 + 1000);
+	msleep(*msec);
+	gpio_set_value(*phy_reset, 1);
 
 	return 0;
 }
