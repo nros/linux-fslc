@@ -1,6 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0
 include ../scripts/Makefile.include
 
+CC = $(CROSS_COMPILE)gcc
+CFLAGS += -Wall -g -D_GNU_SOURCE
+
 bindir ?= /usr/bin
 
 ifeq ($(srctree),)
