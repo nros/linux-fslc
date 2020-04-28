@@ -90,6 +90,7 @@ static int led_pwm_add(struct device *dev, struct led_pwm_priv *priv,
 	led_data->active_low = led->active_low;
 	led_data->cdev.name = led->name;
 	led_data->cdev.default_trigger = led->default_trigger;
+	led_data->cdev.brightness_set = led_pwm_set;
 	led_data->cdev.brightness = led->initial_brightness;
 	led_data->cdev.max_brightness = led->max_brightness;
 	led_data->cdev.flags = LED_CORE_SUSPENDRESUME;
@@ -123,7 +124,7 @@ static int led_pwm_add(struct device *dev, struct led_pwm_priv *priv,
 	ret = led_classdev_register(dev, &led_data->cdev);
 	if (ret == 0) {
 		priv->num_leds++;
-		led_pwm_set(&led_data->cdev, led_data->cdev.brightness);
+		led_pwm_set(&led_data->cdev, led->initial_brightness);
 	} else {
 		dev_err(dev, "failed to register PWM led for %s: %d\n",
 			led->name, ret);
@@ -149,8 +150,10 @@ static int led_pwm_create_of(struct device *dev, struct led_pwm_priv *priv)
 		led.active_low = of_property_read_bool(child, "active-low");
 		of_property_read_u32(child, "max-brightness",
 				     &led.max_brightness);
-		if (of_property_read_u32(child, "initial-brightness",
-					 &led.initial_brightness))
+		ret = of_property_read_u32(child, "initial-brightness",
+				     &led.initial_brightness);
+
+		if (ret != 0)
 			led.initial_brightness = LED_OFF;
 
 		ret = led_pwm_add(dev, priv, &led, child);
@@ -206,6 +209,7 @@ static int led_pwm_probe(struct platform_device *pdev)
 
 static int led_pwm_remove(struct platform_device *pdev)
 {
+
 	struct led_pwm_priv *priv = platform_get_drvdata(pdev);
 
 	led_pwm_cleanup(priv);
