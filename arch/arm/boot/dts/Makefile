@@ -517,6 +517,7 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
 	imx6q-pixi.dtb \
 	imx6q-pixi-cq100.dtb \
 	imx6q-pixi-cq200.dtb \
+	imx6q-pixi-cqx00.dtb \
 	imx6q-rex-pro.dtb \
 	imx6q-sabreauto.dtb \
 	imx6q-sabrelite.dtb \
