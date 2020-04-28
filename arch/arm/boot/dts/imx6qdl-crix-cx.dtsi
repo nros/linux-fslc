@@ -210,6 +210,14 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_powerfail>;
 
+	powerfail_gpio {
+		pinctrl_powerfail: powerfailgrp {
+			fsl,pins = <
+				MX6QDL_PAD_GPIO_9__GPIO1_IO09		0x130b0
+			>;
+		};
+	};
+
 	imx6qdl-crix {
 		pinctrl_enet: enetgrp {
 			fsl,pins = <
