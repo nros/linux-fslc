@@ -2845,35 +2845,6 @@ static int fec_enet_alloc_buffers(struct net_device *ndev)
 	return 0;
 }
 
-static void fec_reset_phy(struct fec_enet_private *fep)
-{
-	if (!gpio_is_valid(fep->phy_reset))
-		return;
-
-	gpio_set_value(fep->phy_reset, 0);
-
-	msleep(fep->phy_reset_msec);
-
-	gpio_set_value(fep->phy_reset, 1);
-}
-
-static inline bool fec_enet_irq_workaround(struct fec_enet_private *fep)
-{
-	struct device_node *np = fep->pdev->dev.of_node;
-	struct device_node *intr_node;
-
-	intr_node = of_parse_phandle(np, "interrupts-extended", 0);
-	if (intr_node && !strcmp(intr_node->name, "gpio")) {
-		/*
-		 * If the interrupt controller is a GPIO node, it must have
-		 * applied the workaround for WAIT mode bug.
-		 */
-		return true;
-	}
-
-	return false;
-}
-
 static int
 fec_enet_open(struct net_device *ndev)
 {
@@ -2900,8 +2871,6 @@ fec_enet_open(struct net_device *ndev)
 		reset_again = false;
 	else
 		reset_again = true;
-
-	fec_reset_phy(fep);
 
 	/* I should reset the ring buffers here, but I don't yet know
 	 * a simple way to do that.
@@ -3275,24 +3244,26 @@ static int fec_enet_init(struct net_device *ndev)
 	return 0;
 }
 
-static int
-fec_get_reset_phy(struct platform_device *pdev, int *msec, int *phy_reset)
+#ifdef CONFIG_OF
+static int fec_reset_phy(struct platform_device *pdev)
 {
-	int err;
+	int err, phy_reset;
+	bool active_high = false;
+	int msec = 1, phy_post_delay = 0;
 	struct device_node *np = pdev->dev.of_node;
 
-	if (!np || !of_device_is_available(np))
+	if (!np)
 		return 0;
 
-	err = of_property_read_u32(np, "phy-reset-duration", msec);
+	err = of_property_read_u32(np, "phy-reset-duration", &msec);
 	/* A sane reset duration should not be longer than 1s */
-	if (!err && *msec > 1000)
-		*msec = 1;
+	if (!err && msec > 1000)
+		msec = 1;
 
-	*phy_reset = of_get_named_gpio(np, "phy-reset-gpios", 0);
+	phy_reset = of_get_named_gpio(np, "phy-reset-gpios", 0);
 	if (phy_reset == -EPROBE_DEFER)
 		return phy_reset;
-	if (!gpio_is_valid(*phy_reset))
+	else if (!gpio_is_valid(phy_reset))
 		return 0;
 
 	err = of_property_read_u32(np, "phy-reset-post-delay", &phy_post_delay);
@@ -3302,8 +3273,9 @@ fec_get_reset_phy(struct platform_device *pdev, int *msec, int *phy_reset)
 
 	active_high = of_property_read_bool(np, "phy-reset-active-high");
 
-	err = devm_gpio_request_one(&pdev->dev, *phy_reset,
-				    GPIOF_OUT_INIT_LOW, "phy-reset");
+	err = devm_gpio_request_one(&pdev->dev, phy_reset,
+			active_high ? GPIOF_OUT_INIT_HIGH : GPIOF_OUT_INIT_LOW,
+			"phy-reset");
 	if (err) {
 		dev_err(&pdev->dev, "failed to get phy-reset-gpios: %d\n", err);
 		return err;
@@ -3324,11 +3296,19 @@ fec_get_reset_phy(struct platform_device *pdev, int *msec, int *phy_reset)
 	else
 		usleep_range(phy_post_delay * 1000,
 			     phy_post_delay * 1000 + 1000);
-	msleep(*msec);
-	gpio_set_value(*phy_reset, 1);
 
 	return 0;
 }
+#else /* CONFIG_OF */
+static int fec_reset_phy(struct platform_device *pdev)
+{
+	/*
+	 * In case of platform probe, the reset has been done
+	 * by machine code.
+	 */
+	return 0;
+}
+#endif /* CONFIG_OF */
 
 static void
 fec_enet_get_queue_num(struct platform_device *pdev, int *num_tx, int *num_rx)
@@ -3529,11 +3509,6 @@ fec_probe(struct platform_device *pdev)
 	pm_runtime_set_active(&pdev->dev);
 	pm_runtime_enable(&pdev->dev);
 
-	ret = fec_get_reset_phy(pdev, &fep->phy_reset_msec, &fep->phy_reset);
-
-	if (ret)
-		goto failed_reset;
-
 	ret = fec_reset_phy(pdev);
 	if (ret)
 		goto failed_reset;
@@ -3595,7 +3570,6 @@ failed_register:
 	fec_enet_mii_remove(fep);
 failed_mii_init:
 failed_irq:
-failed_reset:
 failed_init:
 	fec_ptp_stop(pdev);
 	if (fep->reg_phy)

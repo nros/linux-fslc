@@ -81,44 +81,39 @@ static unsigned int rotary_encoder_get_state(struct rotary_encoder *encoder)
 
 static void rotary_encoder_report_event(struct rotary_encoder *encoder)
 {
-	const struct rotary_encoder_platform_data *pdata = encoder->pdata;
-	unsigned int type = pdata->type ?: EV_KEY;
+	unsigned int keycode = encoder->dir < 0 ? encoder->code_cw :
+						  encoder->code_ccw;
+	if (encoder->noaxis) {
+		input_event(encoder->input, encoder->event_type,
+				 keycode, 1);
+		input_event(encoder->input, encoder->event_type,
+				 keycode, 0);
+		goto out;
+	}
 
-	if (pdata->noaxis) {
-		if (encoder->dir) {
-			/* counter-clockwise */
-			input_event(encoder->input, type, pdata->codeCCW, 1);
-			input_event(encoder->input, type, pdata->codeCCW, 0);
-		} else {
-			/* clockwise */
-			input_event(encoder->input, type, pdata->codeCW, 1);
-			input_event(encoder->input, type, pdata->codeCW, 0);
-		}
+	if (encoder->relative_axis) {
+		input_report_rel(encoder->input,
+				 encoder->axis, encoder->dir);
 	} else {
-		if (pdata->relative_axis) {
-			input_report_rel(encoder->input,
-					 pdata->axis, encoder->dir ? -1 : 1);
+		unsigned int pos = encoder->pos;
+
+		if (encoder->dir < 0) {
+			/* turning counter-clockwise */
+			if (encoder->rollover)
+				pos += encoder->steps;
+			if (pos)
+				pos--;
 		} else {
-			unsigned int pos = encoder->pos;
-
-			if (encoder->dir) {
-				/* turning counter-clockwise */
-				if (pdata->rollover)
-					pos += pdata->steps;
-				if (pos)
-					pos--;
-			} else {
-				/* turning clockwise */
-				if (pdata->rollover || pos < pdata->steps)
-					pos++;
-			}
-
-			if (pdata->rollover)
-				pos %= pdata->steps;
-
-			encoder->pos = pos;
-			input_report_abs(encoder->input, pdata->axis, encoder->pos);
+			/* turning clockwise */
+			if (encoder->rollover || pos < encoder->steps)
+				pos++;
 		}
+
+		if (encoder->rollover)
+			pos %= encoder->steps;
+
+		encoder->pos = pos;
+		input_report_abs(encoder->input, encoder->axis, encoder->pos);
 	}
 
 out:
@@ -198,23 +193,6 @@ static irqreturn_t rotary_encoder_quarter_period_irq(int irq, void *dev_id)
 		goto out;
 
 	rotary_encoder_report_event(encoder);
-
-	pdata->relative_axis = !!of_get_property(np,
-					"rotary-encoder,relative-axis", NULL);
-	pdata->rollover = !!of_get_property(np,
-					"rotary-encoder,rollover", NULL);
-	pdata->half_period = !!of_get_property(np,
-					"rotary-encoder,half-period", NULL);
-	pdata->noaxis = !!of_get_property(np,
-					"rotary-encoder,noaxis", NULL);
-	if (pdata->noaxis) {
-		if (of_property_read_u32(np, "rotary-encoder,codeCW", &pdata->codeCW))
-			pdata->codeCW = 28;
-		if (of_property_read_u32(np, "rotary-encoder,codeCCW", &pdata->codeCCW))
-			pdata->codeCCW = 28;
-		if (of_property_read_u32(np, "rotary-encoder,type", &pdata->type))
-			pdata->type = EV_KEY;
-	}
 
 out:
 	encoder->last_stable = state;
@@ -310,26 +288,17 @@ static int rotary_encoder_probe(struct platform_device *pdev)
 	input->id.bustype = BUS_HOST;
 	input->dev.parent = dev;
 
-	if (pdata->noaxis) {
-		input->evbit[0] = BIT_MASK(EV_KEY);
-		input_set_capability(input, pdata->type ?: EV_KEY, pdata->codeCW);
-		input_set_capability(input, pdata->type ?: EV_KEY, pdata->codeCCW);
+	if (encoder->noaxis) {
+		input_set_capability(input, encoder->event_type,
+				     encoder->code_cw);
+		input_set_capability(input, encoder->event_type,
+				     encoder->code_ccw);
 	} else {
-		if (pdata->relative_axis) {
-			input->evbit[0] = BIT_MASK(EV_REL);
-			input->relbit[0] = BIT_MASK(pdata->axis);
-		} else {
-			input->evbit[0] = BIT_MASK(EV_ABS);
-			input_set_abs_params(encoder->input,
-					     pdata->axis, 0, pdata->steps, 0, 1);
-		}
-	}
-
-	/* request the GPIOs */
-	err = gpio_request_one(pdata->gpio_a, GPIOF_IN, dev_name(dev));
-	if (err) {
-		dev_err(dev, "unable to request GPIO %d\n", pdata->gpio_a);
-		goto exit_free_mem;
+		if (encoder->relative_axis)
+			input_set_capability(input, EV_REL, encoder->axis);
+		else
+			input_set_abs_params(input, encoder->axis, 0,
+					     encoder->steps, 0, 1);
 	}
 
 	switch (steps_per_period >> (encoder->gpios->ndescs - 2)) {

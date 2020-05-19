@@ -355,12 +355,6 @@
 				MX6QDL_PAD_SD3_DAT1__FLEXCAN2_RX	0x1b0b0
 			>;
 		};
-
-		pinctrl_powerfail: powerfailgrp {
-			fsl,pins = <
-				MX6QDL_PAD_GPIO_9__GPIO1_IO09		0x130b0
-			>;
-		};
 	};
 };
 
